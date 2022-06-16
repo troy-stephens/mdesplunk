@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "cs_splunk": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7210",
+      "launchBrowser": false
+    }
+  }
+}
