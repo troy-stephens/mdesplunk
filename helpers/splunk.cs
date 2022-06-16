@@ -84,6 +84,7 @@ namespace Splunk.mdeToSplunkHEC
             string hecToken = Helpers.Utilities.GetEnvironmentVariable("SPLUNK_HEC_TOKEN");
 
             var serializedBody = JsonConvert.SerializeObject(payload);
+            log.LogInformation(serializedBody);
             var requestMessage = new HttpRequestMessage(HttpMethod.Post, hecUrl)
             {
                 Content = new StringContent(serializedBody, Encoding.UTF8)
