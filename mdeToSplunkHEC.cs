@@ -36,11 +36,11 @@ namespace Splunk.mdeToSplunkHEC
             List<EventData> archiveItems = new List<EventData>();
             int batchSize = 0;
             int index = 0;
-            string sourcetype = Helpers.Utilities.GetEnvironmentVariable("MDE_SOURCETYPE");
             SplunkPayload splunkEvent = new SplunkPayload();
 
+            string sourcetype = Helpers.Utilities.GetEnvironmentVariable("MDE_SOURCETYPE");
             splunkEvent.sourcetype = sourcetype;
-            
+
             foreach (EventData item in events)
             {
                 string messageBody = Encoding.UTF8.GetString(item.EventBody);
