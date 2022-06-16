@@ -29,7 +29,7 @@ namespace Splunk.mdeToSplunkHEC
         [FunctionName("mdeToSplunkHEC")]
         public static async Task Run([EventHubTrigger(
                                             eventHubName: "%EVENTHUB_NAME%", 
-                                            ConsumerGroup = "%EVENTHUB_CONSUMER_GROUP%", 
+                                            ConsumerGroup = "%EVENTHUB_CONSUMERGROUP%", 
                                             Connection = "EVENTHUB_CONNECTION")] EventData[] events, ILogger log)
         {
             var exceptions = new List<Exception>();
