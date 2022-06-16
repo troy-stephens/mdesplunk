@@ -30,7 +30,7 @@ namespace Splunk.mdeToSplunkHEC
         public static async Task Run([EventHubTrigger(
                                             eventHubName: "%EVENTHUB_NAME%", 
                                             ConsumerGroup = "%EVENTHUB_CONSUMERGROUP%", 
-                                            Connection = "EVENTHUB_CONNECTION")] EventData[] events, ILogger log)
+                                            Connection = "EVENTHUB_CONNECTION_STRING")] EventData[] events, ILogger log)
         {
             var exceptions = new List<Exception>();
             List<EventData> archiveItems = new List<EventData>();
