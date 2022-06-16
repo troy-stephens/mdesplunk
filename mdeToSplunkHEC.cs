@@ -45,7 +45,7 @@ namespace Splunk.mdeToSplunkHEC
                 dynamic message;
                 try
                 {
-                    log.LogInformation($"Parsing message: {item}");
+                    log.LogInformation($"Parsing message: {messageBody}");
                     try {
                         message = JsonConvert.DeserializeObject<dynamic>(messageBody);
                     } catch (Exception err) {
