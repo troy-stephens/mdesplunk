@@ -11,7 +11,7 @@ variables:
   # Function app name
   functionAppName: 'mdesplunk'
   # Agent VM image name
-  vmImageName: 'vs2017-win2016'
+  vmImageName: 'windows-2022'
 
 stages:
 - stage: Build
