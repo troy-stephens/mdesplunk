@@ -12,6 +12,8 @@ variables:
   functionAppName: 'mdesplunk'
   # Agent VM image name
   vmImageName: 'windows-2022'
+  resourceGroupName: 'mdetest'
+  slotName: 'dev'
 
 stages:
 - stage: Build
@@ -70,6 +72,9 @@ stages:
             displayName: 'Azure functions app deploy'
             inputs:
               azureSubscription: '$(azureSubscription)'
-              appType: functionApp
-              appName: $(functionAppName)
+              appType: 'functionAppLinux'
+              appName: '$(functionAppName)'
+              deployToSlotOrASE: true
+              resourceGroupName: '$(resourceGroupName)'
+              slotName: '$(slotName)'
               package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
