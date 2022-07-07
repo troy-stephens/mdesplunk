@@ -51,7 +51,22 @@ namespace Splunk.mdeToSplunkHEC
                     log.LogInformation($"Parsing message: {messageBody}");
                     try {
                         message = JsonConvert.DeserializeObject<dynamic>(messageBody);
-                    } catch (Exception err) {
+                    } 
+                    catch(JsonReaderException jre)
+                    {
+                        try
+                        {
+                            log.LogWarning($"Invalid json. Parsing message body");
+                            string parsedBody = messageBody.Substring(0, messageBody.LastIndexOf("}") + 1);
+                            message = JsonConvert.DeserializeObject<dynamic>(parsedBody);
+                        }
+                        catch (Exception err) {
+                            log.LogError($"Error parsing eventhub message: {err}");
+                            log.LogError($"{item}");
+                            return;
+                        }
+                    }
+                    catch (Exception err) {
                         log.LogError($"Error parsing eventhub message: {err}");
                         log.LogError($"{item}");
                         return;
