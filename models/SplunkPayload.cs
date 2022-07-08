@@ -17,7 +17,7 @@ using System.Collections.Generic;
 namespace Splunk.mdeToSplunkHEC
 {
     public class SplunkPayload{
-        public string sourcetype{get;set;}
+        //public string sourcetype{get;set;}
         public EventRecords @event{get;set;}
 
         public SplunkPayload()

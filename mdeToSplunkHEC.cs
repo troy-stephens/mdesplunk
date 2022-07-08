@@ -39,7 +39,7 @@ namespace Splunk.mdeToSplunkHEC
             SplunkPayload splunkEvent = new SplunkPayload();
 
             string sourcetype = Helpers.Utilities.GetEnvironmentVariable("MDE_SOURCETYPE");
-            splunkEvent.sourcetype = sourcetype;
+            //splunkEvent.sourcetype = sourcetype;
 
             foreach (EventData item in events)
             {
