@@ -52,7 +52,7 @@ namespace Splunk.mdeToSplunkHEC
                     log.LogInformation($"Parsing message: {messageBody}");
                     var eventMessages = messageBody.Split("\r\n");
                     log.LogInformation($"Found {eventMessages.Length} events.");
-                    for(var j = 0; j < eventMessages.Length; j++)// var eventMessage in eventMessages)
+                    for(var j = 0; j < eventMessages.Length; j++)
                     {
                         var eventMessage = eventMessages[j];
                         try
