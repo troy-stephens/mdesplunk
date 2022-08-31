@@ -97,7 +97,6 @@ namespace Splunk.Helpers
             // Add the authorization header
             var authorizationHeader = $"Splunk {hecToken}";
             requestMessage.Headers.Add("Authorization", authorizationHeader);
-            requestMessage.Headers.Add("Connection", "keep-alive");
 
             var client = _hcf.CreateClient();
             // Post the request
