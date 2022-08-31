@@ -14,7 +14,7 @@ limitations under the License.
 
 using System.Collections.Generic;
 
-namespace Splunk.mdeToSplunkHEC
+namespace Splunk.Models
 {
     public class SplunkPayload{
         //public string sourcetype{get;set;}

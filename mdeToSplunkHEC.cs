@@ -21,15 +21,22 @@ using Azure.Messaging.EventHubs;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Splunk.Helpers;
+using Splunk.Models;
 
 namespace Splunk.mdeToSplunkHEC
 {
-    public static class mdeToSplunkHEC
+    public class mdeToSplunkHEC
     {
         const int RECORDS_PER_BATCH = 50;
-        
+        private readonly splunk splunk;
+
+        public mdeToSplunkHEC(splunk splunk)
+        {
+            this.splunk = splunk;
+        }
         [FunctionName("mdeToSplunkHEC")]
-        public static async Task Run([EventHubTrigger(
+        public async Task Run([EventHubTrigger(
                                             eventHubName: "%EVENTHUB_NAME%",
                                             ConsumerGroup = "%EVENTHUB_CONSUMERGROUP%",
                                             Connection = "EVENTHUB_CONNECTION_STRING")] EventData[] events, ILogger log)

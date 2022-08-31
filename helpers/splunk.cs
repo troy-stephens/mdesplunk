@@ -23,14 +23,19 @@ using Azure.Messaging.EventHubs;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Splunk.Models;
 
-namespace Splunk.mdeToSplunkHEC
+namespace Splunk.Helpers
 {
-    public static class splunk
+    public class splunk
     {
-        static HttpClient _httpClient = new HttpClient();
+        private readonly IHttpClientFactory _hcf;
 
-        public static string getSourceType(string sourcetype, string resourceId, string category)
+        public splunk(IHttpClientFactory hcf)
+        {
+            _hcf = hcf;
+        }
+        public string getSourceType(string sourcetype, string resourceId, string category)
         {
             // If this is an AAD sourcetype, append the category to the sourcetype and return
             string[] aadSourcetypes = { Helpers.Utilities.GetEnvironmentVariable("AAD_LOG_SOURCETYPE"), Helpers.Utilities.GetEnvironmentVariable("AAD_NON_INTERACTIVE_SIGNIN_LOG_SOURCETYPE"), Helpers.Utilities.GetEnvironmentVariable("AAD_SERVICE_PRINCIPAL_SIGNIN_LOG_SOURCETYPE"), Helpers.Utilities.GetEnvironmentVariable("AAD_PROVISIONING_LOG_SOURCETYPE") };
@@ -57,7 +62,7 @@ namespace Splunk.mdeToSplunkHEC
             }
         }
 
-        public static string getEpochTime(string timeString)
+        public string getEpochTime(string timeString)
         {
             try
             {
@@ -72,20 +77,20 @@ namespace Splunk.mdeToSplunkHEC
             }
         }
 
-        public static string getTimeStamp(dynamic message) {
+        public string getTimeStamp(dynamic message) {
             if(message.time != null && string.IsNullOrEmpty(message.time.ToString())) {
                 return getEpochTime(message.time.ToString());
                 }
             return null;
         }
 
-        public static async Task sendPayloadToHEC(SplunkPayload payload, ILogger log) {
+        public async Task sendPayloadToHEC(SplunkPayload payload, ILogger log) {
             string hecUrl = Helpers.Utilities.GetEnvironmentVariable("SPLUNK_HEC_URL");
             string hecToken = Helpers.Utilities.GetEnvironmentVariable("SPLUNK_HEC_TOKEN");
 
             var serializedBody = JsonConvert.SerializeObject(payload);
             log.LogInformation(serializedBody);
-            var requestMessage = new HttpRequestMessage(HttpMethod.Post, hecUrl)
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, hecUrl)
             {
                 Content = new StringContent(serializedBody, Encoding.UTF8)
             };
@@ -93,9 +98,10 @@ namespace Splunk.mdeToSplunkHEC
             var authorizationHeader = $"Splunk {hecToken}";
             requestMessage.Headers.Add("Authorization", authorizationHeader);
             requestMessage.Headers.Add("Connection", "keep-alive");
-            
+
+            var client = _hcf.CreateClient();
             // Post the request
-            await _httpClient.SendAsync(requestMessage);
+            using var response = await client.SendAsync(requestMessage);
         }
     }
 }
