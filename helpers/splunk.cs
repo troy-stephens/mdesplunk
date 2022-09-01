@@ -93,7 +93,7 @@ namespace Splunk.mdeToSplunkHEC
             var authorizationHeader = $"Splunk {hecToken}";
             requestMessage.Headers.Add("Authorization", authorizationHeader);
             requestMessage.Headers.Add("Connection", "keep-alive");
-            requestMessage.Headers.Add("Keep-Alive", "timeout=30, max=128");
+            requestMessage.Headers.Add("Keep-Alive", "timeout=5, max=1000");
 
             // Post the request
             await _httpClient.SendAsync(requestMessage);
