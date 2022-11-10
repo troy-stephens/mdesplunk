@@ -26,78 +26,77 @@ namespace Splunk.mdeToSplunkHEC
 {
     public static class mdeToSplunkHEC
     {
+        const int RECORDS_PER_BATCH = 50;
+        
         [FunctionName("mdeToSplunkHEC")]
         public static async Task Run([EventHubTrigger(
-                                            eventHubName: "%EVENTHUB_NAME%", 
-                                            ConsumerGroup = "%EVENTHUB_CONSUMERGROUP%", 
+                                            eventHubName: "%EVENTHUB_NAME%",
+                                            ConsumerGroup = "%EVENTHUB_CONSUMERGROUP%",
                                             Connection = "EVENTHUB_CONNECTION_STRING")] EventData[] events, ILogger log)
         {
             var exceptions = new List<Exception>();
             List<EventData> archiveItems = new List<EventData>();
-            int batchSize = 0;
-            int index = 0;
-            SplunkPayload splunkEvent = new SplunkPayload();
 
-            string sourcetype = Helpers.Utilities.GetEnvironmentVariable("MDE_SOURCETYPE");
+            var splunkEvent = new SplunkPayload();
+            //string sourcetype = Helpers.Utilities.GetEnvironmentVariable("MDE_SOURCETYPE");
             //splunkEvent.sourcetype = sourcetype;
-
-            foreach (EventData item in events)
+            
+            for (var i = 0; i < events.Length; i++)
             {
+                var item = events[i];
                 string messageBody = Encoding.UTF8.GetString(item.EventBody);
 
                 dynamic message;
                 try
                 {
                     log.LogInformation($"Parsing message: {messageBody}");
-                    try {
-                        message = JsonConvert.DeserializeObject<dynamic>(messageBody);
-                    } 
-                    catch(JsonReaderException jre)
+                    var eventMessages = messageBody.Split("\r\n");
+                    log.LogInformation($"Found {eventMessages.Length} events.");
+                    for(var j = 0; j < eventMessages.Length; j++)
                     {
+                        var eventMessage = eventMessages[j];
                         try
                         {
-                            log.LogWarning($"Invalid json. Parsing message body");
-                            string parsedBody = messageBody.Substring(0, messageBody.LastIndexOf("}") + 1);
-                            message = JsonConvert.DeserializeObject<dynamic>(parsedBody);
+                            log.LogInformation($"Parsing event message: {eventMessage}");
+
+                            message = JsonConvert.DeserializeObject<dynamic>(eventMessage);
+
+                            string eventTimeStamp = splunk.getTimeStamp(message);
+                            if (!string.IsNullOrEmpty(eventTimeStamp)) { message.time = eventTimeStamp; }
+
+                            splunkEvent.@event.records.Add(message);
+
+                            if (splunkEvent.@event.records.Count >= RECORDS_PER_BATCH || 
+                                (i >= events.Length -1 && j >= eventMessages.Length -1)) // last message
+                            {
+                                await splunk.sendPayloadToHEC(splunkEvent, log);
+                                log.LogInformation($"Processed batch of {splunkEvent.@event.records.Count}");
+                                splunkEvent.@event.records.Clear();
+                            }
                         }
-                        catch (Exception err) {
+                        catch (JsonReaderException)
+                        {
+                            try
+                            {
+                                log.LogWarning($"Invalid json. Parsing message body");
+                                string parsedBody = messageBody.Substring(0, messageBody.LastIndexOf("}") + 1);
+                                message = JsonConvert.DeserializeObject<dynamic>(parsedBody);
+                            }
+                            catch (Exception err)
+                            {
+                                log.LogError($"Error parsing eventhub message: {err}");
+                                log.LogError($"{item}");
+                                continue;
+                            }
+                        }
+                        catch (Exception err)
+                        {
                             log.LogError($"Error parsing eventhub message: {err}");
                             log.LogError($"{item}");
-                            return;
+                            continue;
                         }
-                    }
-                    catch (Exception err) {
-                        log.LogError($"Error parsing eventhub message: {err}");
-                        log.LogError($"{item}");
-                        return;
                     }
                     archiveItems.Add(item);
-                    batchSize++;
-                    
-                    string eventTimeStamp = splunk.getTimeStamp(message);
-                    if(!string.IsNullOrEmpty(eventTimeStamp)) { message.time = eventTimeStamp; }
-
-                    splunkEvent.@event.records.Add(message);
-
-                    if(batchSize >= 50 || index >= events.Length - 1)
-                    { 
-                        try
-                        {
-                            await splunk.sendPayloadToHEC(splunkEvent, log);
-                        }
-                        catch(Exception err)
-                        {
-                            log.LogError($"Error posting to Splunk HTTP Event Collector: {err}");
-                            
-                            // If the event was not successfully sent to Splunk, drop the event in a storage blob
-                            //context.bindings.outputBlob = archiveItems;                       
-                        }
-                        log.LogInformation($"Processed batch of {batchSize}");
-                        archiveItems.Clear();
-                        batchSize = 0;
-                        
-                        splunkEvent.@event.records.Clear();
-                    }
                     log.LogInformation($"C# Event Hub trigger function processed a message: {messageBody}");
                     await Task.Yield();
                 }
