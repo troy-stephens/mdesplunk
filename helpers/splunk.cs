@@ -79,7 +79,7 @@ namespace Splunk.mdeToSplunkHEC
             return null;
         }
 
-        public static async Task sendPayloadToHEC(SplunkPayload payload, ILogger log) {
+        public static async Task<int> sendPayloadToHEC(SplunkPayload payload, ILogger log) {
             string hecUrl = Helpers.Utilities.GetEnvironmentVariable("SPLUNK_HEC_URL");
             string hecToken = Helpers.Utilities.GetEnvironmentVariable("SPLUNK_HEC_TOKEN");
 
@@ -97,6 +97,8 @@ namespace Splunk.mdeToSplunkHEC
 
             // Post the request
             await _httpClient.SendAsync(requestMessage);
+            
+            return serializedBody.Length;
         }
     }
 }
